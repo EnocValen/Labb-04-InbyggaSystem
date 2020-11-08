@@ -112,23 +112,56 @@ inline uint8_t i2c_read_NAK() {
 }
 
 inline void eeprom_wait_until_write_complete() {
+	while (i2c_get_status() != 0x18) { // This does a loops untils get status gets to 0x18 and then starts the rest of the function.
 
+		i2c_start();
+
+		i2c_xmit_addr(EEPROM_ADDR, I2C_W);
+	}
 }
+	uint8_t eeprom_read_byte(uint8_t addr) {
+		uint8_t data;
 
-uint8_t eeprom_read_byte(uint8_t addr) {
-	// ...
-}
+		i2c_start();
+		i2c_xmit_addr(EEPROM_ADDR, I2C_W);
+		i2c_meaningful_status(i2c_get_status());
+		i2c_xmit_byte(addr);
+		i2c_meaningful_status(i2c_get_status());
+		i2c_start();
+		i2c_xmit_addr(EEPROM_ADDR, I2C_R);
+		i2c_meaningful_status(i2c_get_status());
 
-void eeprom_write_byte(uint8_t addr, uint8_t data) {
-	// ...
-}
+		data = i2c_read_NAK();
+		return data;
+	}
+
+	void eeprom_write_byte(uint8_t addr, uint8_t data) {
+		i2c_start();
+
+		i2c_xmit_addr(EEPROM_ADDR, I2C_W);
+		i2c_meaningful_status(i2c_get_status());
+
+		i2c_xmit_byte(addr);
+		i2c_meaningful_status(i2c_get_status());
+
+		i2c_xmit_byte(data);
+		i2c_meaningful_status(i2c_get_status());
+
+		i2c_stop();
+
+		eeprom_wait_until_write_complete();
+
+	}
 
 
 
-void eeprom_write_page(uint8_t addr, uint8_t *data) {
-	// ... (VG)
-}
 
-void eeprom_sequential_read(uint8_t *buf, uint8_t start_addr, uint8_t len) {
-	// ... (VG)
-}
+
+//
+//void eeprom_write_page(uint8_t addr, uint8_t *data) {
+//	// ... (VG)
+//}
+//
+//void eeprom_sequential_read(uint8_t *buf, uint8_t start_addr, uint8_t len) {
+//	// ... (VG)
+//}
